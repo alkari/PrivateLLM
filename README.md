@@ -19,17 +19,21 @@ Provides a document question-answering system that uses Ollama for LLM processin
 - Minimum hardware:
   - 4GB RAM (8GB recommended)
   - 2 CPU cores
-  - 10GB free disk space (more for larger document collections)
+  - 40GB free disk space (more for larger document collections)
+  - GPU (Recommended)!
 
 ## Installation
 
 1. Clone this repository:
    ```bash
    git clone https://github.com/alkari/PrivateLLM.git 
-   cd PrivateLLM```
+   cd PrivateLLM
+   ```
 
 2. Run the installation script:
-   ```sudo ./install.sh```
+   ```bash
+   sudo ./install.sh
+   ```
 
 The installation will:
 
