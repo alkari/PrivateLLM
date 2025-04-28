@@ -47,7 +47,7 @@ The installation will:
 Customize the service by editing these files:
 
 1. Environment variables (/etc/ollama-pdf-qa/.env):
-```
+```bash
 # Ollama Connection
 OLLAMA_PORT=11434
 LANGUAGE_MODEL=tinyllama  # Change to 'mistral' or other supported models
@@ -55,9 +55,11 @@ LANGUAGE_MODEL=tinyllama  # Change to 'mistral' or other supported models
 # Service Configuration
 QA_PORT=8000              # Internal service port
 MAX_DOCUMENTS=10          # Maximum documents to process```
-
+```
 2. Available models (edit install.sh):
-```OLLAMA_MODELS=("phi" "mistral" "gemma:2b")  # Add/remove models as needed```
+```bash
+OLLAMA_MODELS=("phi" "mistral" "gemma:2b")  # Add/remove models as needed
+```
 
 # API Usage
 
@@ -73,46 +75,67 @@ GET	/ask_all_chunked?question={q}&chunk_size={n}	Query in memory-efficient chunk
 # Example Usage
 
 1. Upload a document:
-```curl -X POST -F "file=@research.pdf" "http://[HOST]/upload?doc_id=paper1"```
+```bash
+curl -X POST -F "file=@research.pdf" "http://[HOST]/upload?doc_id=paper1"
+```
 
 2. Ask a question:
-```curl "http://[HOST]/ask/paper1?question=What%20is%20the%20main%20conclusion?"```
+```bash
+curl "http://[HOST]/ask/paper1?question=What%20is%20the%20main%20conclusion?"
+```
 
 3. List documents:
-```curl "http://[HOST]/documents"```
+```bash
+curl "http://[HOST]/documents"
+```
 
 # Customization
 1. Changing Models
 - Edit the OLLAMA_MODELS array in install.sh
 - Re-run the installation or manually pull new models:
+```bash
+ollama pull llama3
 ```
-ollama pull llama3```
 
 2. Adjusting Performance
 - Chunk Size: Modify in qa_service.py:
-```splitter = RecursiveCharacterTextSplitter(chunk_size=500)  # Adjust as needed```
+```python
+splitter = RecursiveCharacterTextSplitter(chunk_size=500)  # Adjust as needed
+```
 
 - Memory Limits: Edit service file (/etc/systemd/system/ollama-qa.service):
-```MemoryMax=4G  # Add memory limit if needed```
+```python
+MemoryMax=4G  # Add memory limit if needed
+```
 
 # Maintenance
 Common Commands
 - Start/Stop service:
-```sudo systemctl restart ollama-qa```
+```bash
+sudo systemctl restart ollama-qa
+```
 
 - View logs:
-```journalctl -u ollama-qa -f```
+```bash
+journalctl -u ollama-qa -f
+```
 
 - Update models:
-```ollama pull mistral```
+```bash
+ollama pull mistral
+```
 
 - Uninstalling
 Stop and disable services:
-```sudo systemctl stop ollama-qa ollama
-sudo systemctl disable ollama-qa ollama```
+```bash
+sudo systemctl stop ollama-qa ollama
+sudo systemctl disable ollama-qa ollama
+```
 
 - Remove files:
-```sudo rm -rf /etc/ollama-pdf-qa /opt/ollama-qa-venv /var/lib/ollama-qa```
+```bash
+sudo rm -rf /etc/ollama-pdf-qa /opt/ollama-qa-venv /var/lib/ollama-qa
+```
 
 # Troubleshooting
 Error: Connection refused
