@@ -117,6 +117,7 @@ chown -R ollama:ollama "${INSTALL_DIR}" "${DATA_DIR}"
 echo "Creating Python service file..."
 cat > "${INSTALL_DIR}/qa_service.py" << 'EOL'
 import os
+import uuid
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from langchain_ollama import OllamaLLM
 from langchain_community.document_loaders import PyPDFLoader
@@ -279,8 +280,6 @@ async def ask_all_documents(question: str):
             "context": "document_based",
             "documents_used": list(vector_stores.keys())
         }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/ask_all_chunked")
 async def ask_all_chunked(question: str, chunk_size: int = 3):
@@ -297,29 +296,48 @@ async def ask_all_chunked(question: str, chunk_size: int = 3):
                 "context": "general_knowledge"
             }
         raise HTTPException(status_code=400, detail="No documents available")
-    
+
     try:
         # Process in chunks to control memory usage
         all_docs = list(vector_stores.keys())
         results = []
-        
+
         for i in range(0, len(all_docs), chunk_size):
             chunk = all_docs[i:i + chunk_size]
             combined_store = None
-            
+
             for doc_id in chunk:
+                # Get the current document's store
+                current_store = vector_stores[doc_id]
+                
+                # Regenerate ALL document IDs before merging
+                docs_with_new_ids = [
+                    (doc, str(uuid.uuid4()))  # Generate new UUID for each doc
+                    for doc in current_store.docstore._dict.values()
+                ]
+                
+                # Create new temporary store with fresh IDs
+                new_store = FAISS.from_documents(
+                    documents=[doc for doc, _ in docs_with_new_ids],
+                    embedding=embedding_model,
+                    ids=[id for _, id in docs_with_new_ids]
+                )
+
                 if combined_store is None:
-                    combined_store = vector_stores[doc_id]
+                    combined_store = new_store
                 else:
-                    combined_store.merge_from(vector_stores[doc_id])
-            
+                    combined_store.merge_from(new_store)  # Safe merge with new IDs
+
             retriever = combined_store.as_retriever()
             qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
             results.append({
                 "documents": chunk,
                 "answer": qa_chain.invoke(question)
             })
-        
+
+            # Explicit cleanup (optional but recommended)
+            del combined_store
+
         return {
             "results": results,
             "total_documents": len(all_docs),
@@ -327,6 +345,7 @@ async def ask_all_chunked(question: str, chunk_size: int = 3):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     uvicorn.run(
