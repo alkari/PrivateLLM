@@ -39,6 +39,7 @@ The installation will:
 
 - Set up Ollama server
 - Download specified language models
+- Select tinyllama for initial setup (minimal resources requirements)
 - Create a Python virtual environment
 - Configure systemd services
 - Set up port forwarding (80 → 8000)
@@ -68,6 +69,7 @@ Method	Endpoint	Description
 POST	/upload?doc_id={id}	Upload a PDF document
 GET	/documents	List all uploaded documents
 DELETE	/document/{id}	Remove a specific document
+DELETE	/purge_all	Remove all documents
 GET	/ask/{id}?question={q}	Ask a question about a document
 GET	/ask_all?question={q}	Ask across all documents
 GET	/ask_all_chunked?question={q}&chunk_size={n}	Query in memory-efficient chunks
@@ -87,6 +89,11 @@ curl "http://[HOST]/ask/paper1?question=What%20is%20the%20main%20conclusion?"
 3. List documents:
 ```bash
 curl "http://[HOST]/documents"
+```
+
+4. Purge documents:
+```bash
+curl -X DELETE "http://localhost/purge_all"
 ```
 
 # Customization

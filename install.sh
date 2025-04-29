@@ -210,6 +210,20 @@ async def delete_document(doc_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.delete("/purge_all")
+async def purge_all_documents():
+    try:
+        # Delete all PDF files
+        for doc_id in list(vector_stores.keys()):
+            doc_path = os.path.join(DOCUMENT_STORAGE, f"{doc_id}.pdf")
+            if os.path.exists(doc_path):
+                os.remove(doc_path)
+        # Clear all vector stores
+        vector_stores.clear()
+        return {"message": "All documents purged"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/ask/{doc_id}")
 async def ask_question(doc_id: str, question: str):
     if doc_id not in vector_stores:
