@@ -2,7 +2,7 @@
 set -e
 
 ##############################################################################
-# Ollama PDF QA Service Installation Script
+# PrivateLLM Q&A Service Installation Script
 #
 # This script automates the deployment of a document question-answering service
 # using Ollama for LLM processing and FastAPI for the web interface.
@@ -18,16 +18,17 @@ set -e
 # - Ubuntu/Debian-based system
 # - Root privileges
 # - Internet connectivity
+# - GPU (Preferred)
 #
 # Usage:
 #   sudo ./install.sh
 ##############################################################################
 
 # Configuration
-SERVICE_NAME="ollama-qa"
-INSTALL_DIR="/etc/ollama-pdf-qa"
-DATA_DIR="/var/lib/ollama-qa"
-VENV_DIR="/opt/ollama-qa-venv"
+SERVICE_NAME="PrivateLLM"
+INSTALL_DIR="/etc/privatellm"
+DATA_DIR="/var/lib/privatellm"
+VENV_DIR="/opt/privatellm-venv"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 OLLAMA_MODELS=("tinyllama" "phi" "mistral" "gemma:2b" "mistral:7b-instruct-v0.2-q4_K_M")
 
@@ -132,7 +133,7 @@ app = FastAPI()
 
 # Configuration
 MAX_DOCUMENTS = 10
-DOCUMENT_STORAGE = "/var/lib/ollama-qa/documents"
+DOCUMENT_STORAGE = "/var/lib/privatellm/documents"
 os.makedirs(DOCUMENT_STORAGE, exist_ok=True)
 
 # Initialize components
@@ -387,7 +388,7 @@ echo "Installing Python dependencies..."
 echo "Updating service configuration..."
 cat > "${SERVICE_FILE}" <<EOF
 [Unit]
-Description=Ollama PDF QA Service
+Description=Private LLM Service
 After=network.target ollama.service
 Requires=ollama.service
 
