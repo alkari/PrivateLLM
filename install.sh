@@ -263,14 +263,27 @@ async def ask_all_documents(question: str):
                 return await ask_general_question(question)
             raise HTTPException(status_code=400, detail="No documents available")
            
-        # Original document-based QA logic
+        # Create new combined store with fresh UUIDs for all documents
         combined_store = None
-        for store in vector_stores.values():
+        for doc_id, store in vector_stores.items():
+            # Regenerate document IDs with UUIDs before merging
+            docs_with_new_ids = [
+                (doc, str(uuid.uuid4()))  # Generate new UUID for each doc
+                for doc in store.docstore._dict.values()
+            ]
+            
+            # Create temporary store with fresh IDs
+            new_store = FAISS.from_documents(
+                documents=[doc for doc, _ in docs_with_new_ids],
+                embedding=embedding_model,
+                ids=[id for _, id in docs_with_new_ids]
+            )
+
             if combined_store is None:
-                combined_store = store
+                combined_store = new_store
             else:
-                combined_store.merge_from(store)
-        
+                combined_store.merge_from(new_store)  # Safe merge with new IDs
+
         retriever = combined_store.as_retriever()
         qa_chain = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
         response = qa_chain.invoke(question)
@@ -280,6 +293,9 @@ async def ask_all_documents(question: str):
             "context": "document_based",
             "documents_used": list(vector_stores.keys())
         }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/ask_all_chunked")
 async def ask_all_chunked(question: str, chunk_size: int = 3):
