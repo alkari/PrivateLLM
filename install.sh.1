@@ -29,7 +29,7 @@ INSTALL_DIR="/etc/ollama-pdf-qa"
 DATA_DIR="/var/lib/ollama-qa"
 VENV_DIR="/opt/ollama-qa-venv"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
-OLLAMA_MODELS=("tinyllama" "phi" "mistral" "gemma:2b" "mistral:7b-instruct-v0.2-q4_K_M")
+OLLAMA_MODELS=("phi" "mistral" "gemma:2b" "mistral:7b-instruct-v0.2-q4_K_M")
 
 # Check if running as root
 if [ "$(id -u)" -ne 0 ]; then
@@ -223,31 +223,13 @@ async def ask_question(doc_id: str, question: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/ask_general")
-async def ask_general_question(question: str):
-    """Answer general questions using Ollama without requiring documents"""
-    try:
-        # Direct LLM query without document context
-        response = llm.invoke(question)
-        return {
-            "answer": response,
-            "context": "general_knowledge",
-            "documents_used": []
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 @app.get("/ask_all")
 async def ask_all_documents(question: str):
-    """Answer questions using either uploaded documents or general knowledge"""
+    if not vector_stores:
+        raise HTTPException(status_code=400, detail="No documents available")
+    
     try:
-        if not vector_stores:
-            # Fall back to general knowledge if no docs available
-            if os.getenv("FALLBACK_TO_GENERAL_KNOWLEDGE", "true").lower() == "true":
-                return await ask_general_question(question)
-            raise HTTPException(status_code=400, detail="No documents available")
-           
-        # Original document-based QA logic
+        # Combine all vector stores
         combined_store = None
         for store in vector_stores.values():
             if combined_store is None:
@@ -261,8 +243,7 @@ async def ask_all_documents(question: str):
         
         return {
             "answer": response,
-            "context": "document_based",
-            "documents_used": list(vector_stores.keys())
+            "searched_documents": list(vector_stores.keys())
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -270,17 +251,6 @@ async def ask_all_documents(question: str):
 @app.get("/ask_all_chunked")
 async def ask_all_chunked(question: str, chunk_size: int = 3):
     if not vector_stores:
-        if os.getenv("FALLBACK_TO_GENERAL_KNOWLEDGE", "true").lower() == "true":
-            # Return general answer in the same chunked format for consistency
-            general_answer = await ask_general_question(question)
-            return {
-                "results": [{
-                    "documents": [],
-                    "answer": general_answer["answer"]
-                }],
-                "total_documents": 0,
-                "context": "general_knowledge"
-            }
         raise HTTPException(status_code=400, detail="No documents available")
     
     try:
@@ -307,8 +277,7 @@ async def ask_all_chunked(question: str, chunk_size: int = 3):
         
         return {
             "results": results,
-            "total_documents": len(all_docs),
-            "context": "document_based"
+            "total_documents": len(all_docs)
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -326,15 +295,12 @@ EOL
 echo "Creating environment file..."
 cat > "${INSTALL_DIR}/.env" << 'EOL'
 # Ollama Connection
-# OLLAMA_HOST=0.0.0.0 # CAUTION: UNCOMMENT TO OPEN OLLAMA SERVER TO REQUESTS FROM ANY SOURCE!
+# OLLAMA_HOST=0.0.0.0 # OPENS OLLAMA SERVER TO REQUESTS FROM ANY SOURCE
 OLLAMA_PORT=11434
 LANGUAGE_MODEL=tinyllama
 
 # Embedding Model
 EMBEDDING_MODEL=all-MiniLM-L6-v2
-
-# Set default behavior when no docs exist
-FALLBACK_TO_GENERAL_KNOWLEDGE=true
 
 # Service Configuration - USING PORT 8000 NOW
 QA_HOST=0.0.0.0
