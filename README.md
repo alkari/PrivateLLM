@@ -63,7 +63,7 @@ OLLAMA_MODELS=("phi" "mistral" "gemma:2b")  # Add/remove models as needed
 ```
 
 # API Usage
-
+```
 Endpoints
 Method	Endpoint	Description
 POST	/upload?doc_id={id}	Upload a PDF document
@@ -73,6 +73,7 @@ DELETE	/purge_all	Remove all documents
 GET	/ask/{id}?question={q}	Ask a question about a document
 GET	/ask_all?question={q}	Ask across all documents
 GET	/ask_all_chunked?question={q}&chunk_size={n}	Query in memory-efficient chunks
+```
 
 # Example Usage
 
