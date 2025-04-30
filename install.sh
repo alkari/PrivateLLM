@@ -661,7 +661,7 @@ langchain-community==0.3.22
 faiss-cpu==1.11.0
 sentence-transformers==4.1.0
 pypdf==5.4.0
-hf_xet #==1.0.5
+hf_xet==1.0.5
 fastapi==0.115.12
 uvicorn==0.34.2
 python-multipart==0.0.20
@@ -672,6 +672,7 @@ torch==2.7.0 #--index-url https://download.pytorch.org/whl/cpu
 transformers==4.51.3
 tokenizers==0.21.1
 tqdm==4.67.1
+python-dotenv==1.0.1
 EOL
 
 # Install Python dependencies in venv
