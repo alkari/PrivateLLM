@@ -47,7 +47,7 @@ The installation will:
 ## Configuration
 Customize the service by editing these files:
 
-1. Environment variables (/etc/ollama-pdf-qa/.env):
+1. Environment variables (/etc/privatellm/.env):
 ```bash
 # Ollama Connection
 OLLAMA_PORT=11434
@@ -111,7 +111,7 @@ ollama pull llama3
 splitter = RecursiveCharacterTextSplitter(chunk_size=500)  # Adjust as needed
 ```
 
-- Memory Limits: Edit service file (/etc/systemd/system/ollama-qa.service):
+- Memory Limits: Edit service file (/etc/systemd/system/privatellm.service):
 ```python
 MemoryMax=4G  # Add memory limit if needed
 ```
@@ -120,12 +120,12 @@ MemoryMax=4G  # Add memory limit if needed
 Common Commands
 - Start/Stop service:
 ```bash
-sudo systemctl restart ollama-qa
+sudo systemctl restart PrivateLLM
 ```
 
 - View logs:
 ```bash
-journalctl -u ollama-qa -f
+journalctl -u PrivateLLM -f
 ```
 
 - Update models:
@@ -136,13 +136,13 @@ ollama pull mistral
 - Uninstalling
 Stop and disable services:
 ```bash
-sudo systemctl stop ollama-qa ollama
-sudo systemctl disable ollama-qa ollama
+sudo systemctl stop PrivateLLM ollama
+sudo systemctl disable PrivateLLM ollama
 ```
 
 - Remove files:
 ```bash
-sudo rm -rf /etc/ollama-pdf-qa /opt/ollama-qa-venv /var/lib/ollama-qa
+sudo rm -rf /etc/privatellm /opt/privatellm-venv /var/lib/privatellm
 ```
 
 # Troubleshooting
